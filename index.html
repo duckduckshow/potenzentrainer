@@ -209,23 +209,32 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   let correctAdd="",pointsAdd=0,roundAdd=1,totalAdd=10;
 
-  function formatSci(num,exp){ return `${num.toString().replace('.',',')} · 10${superExp[exp]}`; }
-
-  function createTenPowerTask(){
-    const op=Math.random()<0.5?'·':':';
-    const e1=randInt(1,6), e2=randInt(1,6);
-    let resExp = op==='·' ? e1+e2 : e1-e2;
-    if(resExp<0 || resExp>9) return createTenPowerTask();
-    correctAdd=resExp===0?"1":`10${superExp[resExp]}`;
-    return `10${superExp[e1]} ${op} 10${superExp[e2]} = ?`;
+  // Formatierung: Zahl * 10^n → mit Komma
+  function formatSci(num,exp){
+    return `${num.toString().replace('.',',')} · 10${superExp[Math.abs(exp)]}${exp<0?'⁻':''}`;
   }
 
-  function createSciNotationTask(){
-    const exp=randInt(1,6);
-    const base=(Math.random()*9+1).toFixed(2);
-    const val=(base*Math.pow(10,exp)).toLocaleString("de-DE");
-    correctAdd=formatSci(base,exp);
-    return `${val} = ?`;
+  // Zufällige Aufgabe: entweder Zahl ↔ Zehnerpotenz
+  function createConversionTask(){
+    const dir=Math.random()<0.5?"toSci":"toNum"; // Richtung
+    const exp = randInt(-5,6); // von -5 bis 6
+    const mantissa=(Math.random()*9+1).toFixed(2);
+    const value = Number((mantissa*Math.pow(10,exp)).toFixed(6));
+
+    let aufgabe,lösung;
+
+    if(dir==="toSci"){
+      // natürliche Zahl → Zehnerpotenz
+      aufgabe = value.toLocaleString("de-DE").replace(".",",");
+      lösung  = formatSci(mantissa,exp);
+    } else {
+      // Zehnerpotenz → Zahl
+      aufgabe = formatSci(mantissa,exp);
+      lösung  = value.toLocaleString("de-DE").replace(".",",");
+    }
+
+    correctAdd = lösung;
+    return aufgabe;
   }
 
   function newAdditionTask(){
@@ -236,7 +245,7 @@ document.addEventListener("DOMContentLoaded",()=>{
       resultAdd.innerText=`Endstand: ${pointsAdd}/${totalAdd} Punkte.`;
       newBtnAdd.textContent="Neue Runde"; roundAdd=1; pointsAdd=0; return;
     }
-    const aufgabe = roundAdd%2===1 ? createTenPowerTask() : createSciNotationTask();
+    const aufgabe = createConversionTask();
     taskAdd.innerText=aufgabe;
     scoreAdd.innerText=`Aufgabe ${roundAdd} von ${totalAdd} – Punkte: ${pointsAdd}`;
   }
@@ -259,6 +268,7 @@ document.addEventListener("DOMContentLoaded",()=>{
   newBtnAdd.addEventListener("click",newAdditionTask);
   answerAdd.addEventListener("keydown",e=>{if(e.key==="Enter")checkAdditionAnswer();});
   newAdditionTask();
+
 
 });
 </script>
