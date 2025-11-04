@@ -81,9 +81,17 @@ const randInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
 const superExp={1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
 const expToSup=e=>superExp[e]||"";
 const normExp=s=>s.replace(/\s+/g,"").replace(/·/g,"*").replace(/:/g,"/").toLowerCase();
-const removeTrailingZeros=numStr=>{
-  return numStr.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0*$/,"");
-};
+const removeTrailingZeros=str=>str.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0*$/,"");
+
+// — sichere Umrechnung Mantisse * 10^exp → Ganzzahl-String (ohne Floats)
+function mantissaTimes10ToExpAsIntStr(mantissaStr, exp){
+  const s = String(mantissaStr);
+  const [i,f=""] = s.split(".");
+  if (f.length > exp) return null;                 // zu viele Dezimalen
+  const digits = i + f + "0".repeat(exp - f.length);
+  // führende Nullen entfernen, aber mindestens eine Ziffer lassen
+  return digits.replace(/^0+(?=\d)/,"");
+}
 
 // ========= Eingabe-Buttons =========
 function insertSymbol(target,symbol){
@@ -94,7 +102,6 @@ function insertSymbol(target,symbol){
   const pos=start+symbol.length;
   requestAnimationFrame(()=>{target.focus();target.selectionStart=target.selectionEnd=pos;});
 }
-
 function makeSupButtons(containerId,inputEl,includeMul=false){
   const cont=document.getElementById(containerId);
   for(let i=1;i<=9;i++){
@@ -133,7 +140,6 @@ function createPowMultiply(){
   const show2=e2===1?base:`${base}${expToSup(e2)}`;
   return `${show1} · ${show2} = ?`;
 }
-
 function createPowDivide(){
   const base=randomChoice(VARS);
   const e1=randInt(2,9),e2=randInt(1,e1-1);
@@ -143,15 +149,14 @@ function createPowDivide(){
   const show2=e2===1?base:`${base}${expToSup(e2)}`;
   return `${show1} : ${show2} = ?`;
 }
-
 function createPowOfPow(){
   const base=randomChoice(VARS);
   const e1=randInt(1,4),e2=randInt(2,3);
   const res=e1*e2;if(res>9)return createPowOfPow();
   correctSolution=`${base}${expToSup(res)}`;
+  // hier KEIN Weglassen von ¹
   return `(${base}${expToSup(e1)})${expToSup(e2)} = ?`;
 }
-
 function newTask(){
   resultEl.innerText="";answerEl.value="";
   if(round>totalRounds){
@@ -168,42 +173,24 @@ function newTask(){
   taskEl.innerText=aufgabe;
   scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
 }
-
-function checkAnswer() {
-  const input = answerEl.value.trim();
-  if (!input) {
-    resultEl.style.color = "gray";
-    resultEl.innerText = "Bitte gib eine Lösung ein.";
-    return;
-  }
-
-  // Normalisierte Texte vergleichen, aber "x" und "x¹" als gleich behandeln
-  const normIn = normExp(input);
-  const normSol = normExp(correctSolution);
-
-  function equalPowers(a, b) {
-    if (a === b) return true;
-
-    // Fall: x¹ ≡ x oder umgekehrt
-    const strip1 = s => s.replace(/(\^[¹1])/g, "");
-    if (strip1(a) === strip1(b)) return true;
-
-    return false;
-  }
-
-  if (equalPowers(normIn, normSol)) {
-    resultEl.style.color = "green";
-    resultEl.innerText = "✅ Richtig!";
-    score++;
-  } else {
-    resultEl.style.color = "red";
-    resultEl.innerText = `❌ Falsch! Richtig: ${correctSolution}`;
-  }
-
+function checkAnswer(){
+  const input=answerEl.value.trim();
+  if(!input){resultEl.style.color="gray";resultEl.innerText="Bitte gib eine Lösung ein.";return;}
+  const normIn=normExp(input);
+  const normSol=normExp(correctSolution);
+  // y ≡ y¹ akzeptieren (nur hier oben relevant)
+  const stripPow1 = s => s.replace(/¹/g,"").replace(/\^1/g,"");
+  const equal = (normIn===normSol) || (stripPow1(normIn)===stripPow1(normSol));
+  if(equal){ resultEl.style.color="green";resultEl.innerText="✅ Richtig!";score++; }
+  else{ resultEl.style.color="red";resultEl.innerText=`❌ Falsch! Richtig: ${correctSolution}`; }
   round++;
-  scoreEl.innerText = `Aufgabe ${Math.min(round, totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+  scoreEl.innerText=`Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
 }
-
+// ▶ Event-Handler + erster Start (fehlten zuvor)
+checkBtn.onclick=checkAnswer;
+newBtn.onclick=newTask;
+answerEl.onkeydown=e=>{if(e.key==="Enter")checkAnswer();};
+newTask();
 
 // ========= Teil 2 (Zehnerpotenzen & Gleitkomma) =========
 const taskAdd=document.getElementById("taskAdd");
@@ -218,70 +205,58 @@ let correctAdd="",pointsAdd=0,roundAdd=1,totalAdd=10;
 let toggleDir=false; // Richtung abwechselnd
 
 function formatSci(mant,exp){
-  const mStr=removeTrailingZeros(mant.toString().replace('.',','));
+  const mStr=removeTrailingZeros(String(mant).replace('.',','));
   return `${mStr} · 10${superExp[exp]}`;
 }
 
 function createConversionTask(){
-  const isPowerOnly = Math.random() < 0.33;
-  const dir = toggleDir ? "toSci" : "toNum";
+  const isPowerOnly = Math.random() < 0.33;       // ~1/3 reine 10erpotenzen
+  const dir = toggleDir ? "toSci" : "toNum";      // Richtung abwechselnd
   toggleDir = !toggleDir;
-  const exp = randInt(2, 8);
+  const exp = randInt(2, 8);                      // positive Exponenten
   let mantissa;
 
-  // 🔹 Für reine Zehnerpotenzen: Mantisse 2–9
   if (isPowerOnly) {
-    mantissa = randInt(2, 9);
+    mantissa = randInt(2, 9);                     // Multiplikator 2–9
   } else {
-    // 🔹 Für Gleitkommazahlen: 1–9, max 5 Nachkommastellen
-    mantissa = (Math.random() * 9 + 1).toFixed(randInt(1, 5));
+    // Mantisse mit bis zu 5 Dezimalen, aber ohne endende 0
+    mantissa = (Math.random()*9+1).toFixed(randInt(1,5));
     mantissa = removeTrailingZeros(mantissa);
-  }
-
-  // 🔹 Wenn Gleitkommazahl -> prüfen, dass Nachkommastellen ≤ Exponent
-  if (!isPowerOnly) {
+    // Mantisse darf nicht mehr Dezimalen als der Exponent haben → sonst keine ganze Zahl
     const parts = mantissa.split(".");
-    if (parts.length > 1 && parts[1].length > exp) {
-      return createConversionTask(); // Zu viele Nachkommastellen für diesen Exponenten
-    }
+    if (parts.length>1 && parts[1].length > exp) return createConversionTask();
   }
 
-  const value = mantissa * Math.pow(10, exp);
-  if (!Number.isInteger(value) || value <= 100) return createConversionTask();
+  // Wert als Ganzzahl-STRING berechnen (ohne Float-Fehler)
+  const valueStr = mantissaTimes10ToExpAsIntStr(String(mantissa), exp);
+  if (!valueStr) return createConversionTask();
+  if (parseInt(valueStr,10) <= 100) return createConversionTask();
 
-  let aufgabe, lösung;
-  if (dir === "toSci") {
-    // Zahl → Potenz
-    aufgabe = value.toString();
-    lösung = formatSci(mantissa, exp);
-  } else {
-    // Potenz → Zahl
-    aufgabe = formatSci(mantissa, exp);
-    lösung = value.toString();
+  let aufgabe, loesung;
+  if (dir === "toSci") {            // Zahl → Potenz
+    aufgabe = valueStr;             // Anzeige ohne Tausenderpunkte
+    loesung = formatSci(mantissa,exp);
+  } else {                          // Potenz → Zahl
+    aufgabe = formatSci(mantissa,exp);
+    loesung = valueStr;
   }
-
-  correctAdd = lösung;
+  correctAdd = loesung;
   return aufgabe;
 }
 
 function normalizeNum(s){
   return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
 }
-
 function checkAdditionAnswer(){
   const input=answerAdd.value.trim();
   if(!input){resultAdd.style.color="gray";resultAdd.innerText="Bitte gib eine Lösung ein.";return;}
   const a=normExp(normalizeNum(input));
   const b=normExp(normalizeNum(correctAdd));
-  if(a===b){
-    resultAdd.style.color="green";resultAdd.innerText="✅ Richtig!";pointsAdd++;
-  }else{
-    resultAdd.style.color="red";resultAdd.innerText=`❌ Falsch! Richtig: ${correctAdd}`;
-  }
+  if(a===b){ resultAdd.style.color="green";resultAdd.innerText="✅ Richtig!";pointsAdd++; }
+  else{ resultAdd.style.color="red";resultAdd.innerText=`❌ Falsch! Richtig: ${correctAdd}`; }
   roundAdd++;
   scoreAdd.innerText=`Aufgabe ${Math.min(roundAdd,totalAdd)} von ${totalAdd} – Punkte: ${pointsAdd}`;
 }
-
 function newAdditionTask(){
   resultAdd.innerText="";answerAdd.value="";
   if(roundAdd>totalAdd){
