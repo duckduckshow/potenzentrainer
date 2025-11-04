@@ -209,16 +209,25 @@ function createConversionTask(){
   const exp = randInt(2, 8);
   let mantissa;
 
-  // 🔹 Für reine Zehnerpotenzen jetzt immer 2–9
+  // 🔹 Für reine Zehnerpotenzen: Mantisse 2–9
   if (isPowerOnly) {
     mantissa = randInt(2, 9);
   } else {
+    // 🔹 Für Gleitkommazahlen: 1–9, max 5 Nachkommastellen
     mantissa = (Math.random() * 9 + 1).toFixed(randInt(1, 5));
     mantissa = removeTrailingZeros(mantissa);
   }
 
-  const value = Math.round(mantissa * Math.pow(10, exp));
-  if (value <= 100) return createConversionTask();
+  // 🔹 Wenn Gleitkommazahl -> prüfen, dass Nachkommastellen ≤ Exponent
+  if (!isPowerOnly) {
+    const parts = mantissa.split(".");
+    if (parts.length > 1 && parts[1].length > exp) {
+      return createConversionTask(); // Zu viele Nachkommastellen für diesen Exponenten
+    }
+  }
+
+  const value = mantissa * Math.pow(10, exp);
+  if (!Number.isInteger(value) || value <= 100) return createConversionTask();
 
   let aufgabe, lösung;
   if (dir === "toSci") {
@@ -234,7 +243,6 @@ function createConversionTask(){
   correctAdd = lösung;
   return aufgabe;
 }
-
 
 function normalizeNum(s){
   return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
