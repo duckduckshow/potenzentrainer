@@ -5,65 +5,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
 <title>Potenzen & Zehnerpotenzen-Trainer</title>
 <style>
-  html, body { height: 100%; overflow-x: hidden; }
-  body {
-    font-family: system-ui, Arial, sans-serif;
-    background: linear-gradient(to bottom right,#f0f4ff,#e0f7fa);
-    text-align: center;
-    margin: 0;
-    padding: 20px;
+  html,body{height:100%;overflow-x:hidden;}
+  body{
+    font-family:system-ui,Arial,sans-serif;
+    background:linear-gradient(to bottom right,#f0f4ff,#e0f7fa);
+    text-align:center;margin:0;padding:20px;
   }
-  h1, h2 { color:#333; margin:10px 0; font-size:1.6em; font-weight:600; }
-  #task, #taskAddWrapper { font-size:1.8em; margin:15px auto; word-wrap:break-word; display:block; }
-  #eqMark, #eqMarkAdd {
-    font-size:1em;
-    margin-left:6px;
-    color:#333;
-    white-space:nowrap;
-    vertical-align:middle;
-    position: relative;
-    top: -0.1em;
+  h1,h2{color:#333;margin:10px 0;font-size:1.6em;font-weight:600;}
+  #task,#taskAddWrapper{font-size:1.8em;margin:15px auto;word-wrap:break-word;display:block;}
+  #eqMarkAdd{
+    font-size:1em;margin-left:6px;color:#333;white-space:nowrap;
+    vertical-align:middle;position:relative;top:-0.1em;
   }
-  #result,#resultAdd { font-size:1.3em; margin:10px; font-weight:bold; }
-  #score,#scoreAdd { font-size:1.1em; margin:8px; color:#333; }
-  input {
-    padding:10px;
-    font-size:1.2em;
-    width:80%;
-    max-width:300px;
-    text-align:center;
-    border-radius:8px;
-    border:1px solid #aaa;
+  #result,#resultAdd{font-size:1.3em;margin:10px;font-weight:bold;}
+  #score,#scoreAdd{font-size:1.1em;margin:8px;color:#333;}
+  input{
+    padding:10px;font-size:1.2em;width:80%;max-width:300px;text-align:center;
+    border-radius:8px;border:1px solid #aaa;
   }
-  input:focus { outline: none; border-color:#007bff; }
-  button {
-    background:#007bff;
-    color:white;
-    border:none;
-    padding:10px 18px;
-    margin:6px;
-    font-size:1em;
-    border-radius:8px;
-    cursor:pointer;
+  input:focus{outline:none;border-color:#007bff;}
+  button{
+    background:#007bff;color:white;border:none;padding:10px 18px;
+    margin:6px;font-size:1em;border-radius:8px;cursor:pointer;
   }
-  button:hover { background:#0056b3; }
-  hr { margin:30px auto; width:70%; border:1px solid #ccc; }
-
-  .shortcutButtons { margin-top:8px; }
-  .shortcutButtons button {
-    background:#e3e3e3;
-    color:#000;
-    border:1px solid #bbb;
-    padding:6px 10px;
-    font-size:1.1em;
+  button:hover{background:#0056b3;}
+  hr{margin:30px auto;width:70%;border:1px solid #ccc;}
+  .shortcutButtons{margin-top:8px;}
+  .shortcutButtons button{
+    background:#e3e3e3;color:#000;border:1px solid #bbb;
+    padding:6px 10px;font-size:1.1em;
   }
-  .shortcutButtons button:hover { background:#ccc; }
-
-  @media (max-width: 700px) {
-    .shortcutButtons button {
-      padding:8px 14px;
-      font-size:1.3em;
-    }
+  .shortcutButtons button:hover{background:#ccc;}
+  @media(max-width:700px){
+    .shortcutButtons button{padding:8px 14px;font-size:1.3em;}
   }
 </style>
 </head>
@@ -71,7 +45,6 @@
 <h1>Potenzen – Multiplikation, Division, Potenzieren</h1>
 <div id="score">Aufgabe 1 von 10 – Punkte: 0</div>
 <div id="task">lade...</div>
-<div id="eqMark">= ?</div>
 
 <input type="text" id="answer" placeholder="Deine Lösung" autocomplete="off" spellcheck="false"><br>
 <div id="supBtns1" class="shortcutButtons"></div>
@@ -84,7 +57,7 @@
 <h2>Zehnerpotenzen & Gleitkommazahlen</h2>
 <div id="scoreAdd">Aufgabe 1 von 10 – Punkte: 0</div>
 <div id="taskAddWrapper">
-  <span id="taskAdd">lade...</span><span id="eqMarkAdd">= ?</span>
+  <span id="taskAdd">lade...</span><span id="eqMarkAdd"> = ?</span>
 </div>
 
 <input type="text" id="answerAdd" placeholder="Deine Lösung" autocomplete="off" spellcheck="false"><br>
@@ -101,189 +74,194 @@ Diese Seite speichert keine persönlichen Daten und läuft vollständig lokal im
 <script>
 document.addEventListener("DOMContentLoaded",()=>{
 
-  const VARS=['a','b','x','y'];
-  const randomChoice=a=>a[Math.floor(Math.random()*a.length)];
-  const randInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
-  const superExp={1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
-  const expToSup=e=>superExp[e]||"";
-  const normExp=s=>s.replace(/\s+/g,"").replace(/·/g,"*").replace(/:/g,"/").toLowerCase();
+// ========= Hilfsfunktionen =========
+const VARS=['a','b','x','y'];
+const randomChoice=a=>a[Math.floor(Math.random()*a.length)];
+const randInt=(min,max)=>Math.floor(Math.random()*(max-min+1))+min;
+const superExp={1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
+const expToSup=e=>superExp[e]||"";
+const normExp=s=>s.replace(/\s+/g,"").replace(/·/g,"*").replace(/:/g,"/").toLowerCase();
+const removeTrailingZeros=numStr=>{
+  return numStr.replace(/(\.\d*?[1-9])0+$/,"$1").replace(/\.0*$/,"");
+};
 
-  function insertSymbol(target, symbol){
-    const start = target.selectionStart ?? target.value.length;
-    const end = target.selectionEnd ?? target.value.length;
-    const text = target.value;
-    target.value = text.slice(0, start) + symbol + text.slice(end);
-    const pos = start + symbol.length;
-    requestAnimationFrame(()=>{
-      target.focus();
-      target.selectionStart = target.selectionEnd = pos;
-    });
+// ========= Eingabe-Buttons =========
+function insertSymbol(target,symbol){
+  const start=target.selectionStart??target.value.length;
+  const end=target.selectionEnd??target.value.length;
+  const text=target.value;
+  target.value=text.slice(0,start)+symbol+text.slice(end);
+  const pos=start+symbol.length;
+  requestAnimationFrame(()=>{target.focus();target.selectionStart=target.selectionEnd=pos;});
+}
+
+function makeSupButtons(containerId,inputEl,includeMul=false){
+  const cont=document.getElementById(containerId);
+  for(let i=1;i<=9;i++){
+    const btn=document.createElement("button");
+    btn.textContent=superExp[i];
+    btn.type="button";
+    btn.onclick=()=>insertSymbol(inputEl,superExp[i]);
+    cont.appendChild(btn);
   }
-
-  function makeSupButtons(containerId, inputEl) {
-    const cont = document.getElementById(containerId);
-    for (let i=1; i<=9; i++){
-      const btn = document.createElement("button");
-      btn.textContent = superExp[i];
-      btn.type="button";
-      btn.onclick = ()=>insertSymbol(inputEl, superExp[i]);
-      cont.appendChild(btn);
-    }
+  if(includeMul){
     const mulBtn=document.createElement("button");
     mulBtn.textContent="·";
     mulBtn.type="button";
     mulBtn.onclick=()=>insertSymbol(inputEl,"·");
     cont.appendChild(mulBtn);
   }
+}
 
-  // ===== Teil 1 =====
-  const taskEl=document.getElementById("task");
-  const answerEl=document.getElementById("answer");
-  const checkBtn=document.getElementById("checkBtn");
-  const newBtn=document.getElementById("newBtn");
-  const resultEl=document.getElementById("result");
-  const scoreEl=document.getElementById("score");
-  makeSupButtons("supBtns1", answerEl);
+// ========= Teil 1 (Potenzen) =========
+const taskEl=document.getElementById("task");
+const answerEl=document.getElementById("answer");
+const checkBtn=document.getElementById("checkBtn");
+const newBtn=document.getElementById("newBtn");
+const resultEl=document.getElementById("result");
+const scoreEl=document.getElementById("score");
+makeSupButtons("supBtns1",answerEl,false);
 
-  let correctSolution="", round=1, score=0, totalRounds=10;
+let correctSolution="",round=1,score=0,totalRounds=10;
 
-  function createPowMultiply(){
-    const base=randomChoice(VARS);
-    const e1=randInt(1,5), e2=randInt(1,5);
-    const result=e1+e2;
-    if(result>9) return createPowMultiply();
-    correctSolution=`${base}${expToSup(result)}`;
-    const show1=e1===1?base:`${base}${expToSup(e1)}`;
-    const show2=e2===1?base:`${base}${expToSup(e2)}`;
-    return `${show1} · ${show2} = ?`;
+function createPowMultiply(){
+  const base=randomChoice(VARS);
+  const e1=randInt(1,5),e2=randInt(1,5);
+  const res=e1+e2;if(res>9)return createPowMultiply();
+  correctSolution=`${base}${expToSup(res)}`;
+  const show1=e1===1?base:`${base}${expToSup(e1)}`;
+  const show2=e2===1?base:`${base}${expToSup(e2)}`;
+  return `${show1} · ${show2} = ?`;
+}
+
+function createPowDivide(){
+  const base=randomChoice(VARS);
+  const e1=randInt(2,9),e2=randInt(1,e1-1);
+  const res=e1-e2;if(res>9)return createPowDivide();
+  correctSolution=res===0?"1":`${base}${expToSup(res)}`;
+  const show1=e1===1?base:`${base}${expToSup(e1)}`;
+  const show2=e2===1?base:`${base}${expToSup(e2)}`;
+  return `${show1} : ${show2} = ?`;
+}
+
+function createPowOfPow(){
+  const base=randomChoice(VARS);
+  const e1=randInt(1,4),e2=randInt(2,3);
+  const res=e1*e2;if(res>9)return createPowOfPow();
+  correctSolution=`${base}${expToSup(res)}`;
+  return `(${base}${expToSup(e1)})${expToSup(e2)} = ?`;
+}
+
+function newTask(){
+  resultEl.innerText="";answerEl.value="";
+  if(round>totalRounds){
+    taskEl.innerText="🎉 Übungsrunde fertig!";
+    resultEl.style.color="green";
+    resultEl.innerText=`Endstand: ${score}/${totalRounds} Punkte.`;
+    newBtn.textContent="Neue Runde";round=1;score=0;return;
   }
+  const r=Math.random();
+  let aufgabe;
+  if(r<0.4)aufgabe=createPowMultiply();
+  else if(r<0.8)aufgabe=createPowDivide();
+  else aufgabe=createPowOfPow();
+  taskEl.innerText=aufgabe;
+  scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
+}
 
-  function createPowDivide(){
-    const base=randomChoice(VARS);
-    const e1=randInt(2,9), e2=randInt(1,e1-1);
-    const result=e1-e2;
-    if(result>9) return createPowDivide();
-    correctSolution=result===0?"1":`${base}${expToSup(result)}`;
-    const show1=e1===1?base:`${base}${expToSup(e1)}`;
-    const show2=e2===1?base:`${base}${expToSup(e2)}`;
-    return `${show1} : ${show2} = ?`;
+function checkAnswer(){
+  const input=answerEl.value.trim();
+  if(!input){resultEl.style.color="gray";resultEl.innerText="Bitte gib eine Lösung ein.";return;}
+  if(normExp(input)===normExp(correctSolution)){
+    resultEl.style.color="green";resultEl.innerText="✅ Richtig!";score++;
+  }else{
+    resultEl.style.color="red";resultEl.innerText=`❌ Falsch! Richtig: ${correctSolution}`;
   }
+  round++;
+  scoreEl.innerText=`Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+}
+checkBtn.onclick=checkAnswer;
+newBtn.onclick=newTask;
+answerEl.onkeydown=e=>{if(e.key==="Enter")checkAnswer();};
+newTask();
 
-  function createPowOfPow(){
-    const base=randomChoice(VARS);
-    const e1=randInt(1,4), e2=randInt(2,3);
-    const result=e1*e2;
-    if(result>9) return createPowOfPow();
-    correctSolution=`${base}${expToSup(result)}`;
-    return `(${base}${expToSup(e1)})${expToSup(e2)} = ?`;
+// ========= Teil 2 (Zehnerpotenzen & Gleitkomma) =========
+const taskAdd=document.getElementById("taskAdd");
+const resultAdd=document.getElementById("resultAdd");
+const checkBtnAdd=document.getElementById("checkBtnAdd");
+const newBtnAdd=document.getElementById("newBtnAdd");
+const scoreAdd=document.getElementById("scoreAdd");
+const answerAdd=document.getElementById("answerAdd");
+makeSupButtons("supBtns2",answerAdd,true);
+
+let correctAdd="",pointsAdd=0,roundAdd=1,totalAdd=10;
+let toggleDir=false; // Richtung abwechselnd
+
+function formatSci(mant,exp){
+  const mStr=removeTrailingZeros(mant.toString().replace('.',','));
+  return `${mStr} · 10${superExp[exp]}`;
+}
+
+function createConversionTask(){
+  const isPowerOnly=Math.random()<0.33;
+  const dir=toggleDir?"toSci":"toNum";
+  toggleDir=!toggleDir;
+  const exp=randInt(2,8);
+  let mantissa;
+  if(isPowerOnly){
+    mantissa=1;
+  }else{
+    mantissa=(Math.random()*9+1).toFixed(randInt(1,5));
+    mantissa=removeTrailingZeros(mantissa);
   }
-
-  function newTask(){
-    resultEl.innerText="";answerEl.value="";
-    if(round>totalRounds){
-      taskEl.innerText="🎉 Übungsrunde fertig!";
-      resultEl.style.color="green";
-      resultEl.innerText=`Endstand: ${score}/${totalRounds} Punkte.`;
-      newBtn.textContent="Neue Runde"; round=1; score=0; return;
-    }
-    const r=Math.random();
-    let aufgabe;
-    if(r<0.4)aufgabe=createPowMultiply();
-    else if(r<0.8)aufgabe=createPowDivide();
-    else aufgabe=createPowOfPow();
-    taskEl.innerText=aufgabe;
-    scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
+  const value=Math.round(mantissa*Math.pow(10,exp));
+  if(value<=100)return createConversionTask();
+  let aufgabe,lösung;
+  if(dir==="toSci"){
+    aufgabe=value.toString();
+    lösung=formatSci(mantissa,exp);
+  }else{
+    aufgabe=formatSci(mantissa,exp);
+    lösung=value.toString();
   }
+  correctAdd=lösung;
+  return aufgabe;
+}
 
-  function checkAnswer(){
-    const input=answerEl.value.trim();
-    if(!input){resultEl.style.color="gray";resultEl.innerText="Bitte gib eine Lösung ein.";return;}
-    if(normExp(input)===normExp(correctSolution)){
-      resultEl.style.color="green";resultEl.innerText="✅ Richtig!";score++;
-    } else {
-      resultEl.style.color="red";resultEl.innerText=`❌ Falsch! Richtig: ${correctSolution}`;
-    }
-    round++;
-    scoreEl.innerText=`Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+function normalizeNum(s){
+  return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
+}
+
+function checkAdditionAnswer(){
+  const input=answerAdd.value.trim();
+  if(!input){resultAdd.style.color="gray";resultAdd.innerText="Bitte gib eine Lösung ein.";return;}
+  const a=normExp(normalizeNum(input));
+  const b=normExp(normalizeNum(correctAdd));
+  if(a===b){
+    resultAdd.style.color="green";resultAdd.innerText="✅ Richtig!";pointsAdd++;
+  }else{
+    resultAdd.style.color="red";resultAdd.innerText=`❌ Falsch! Richtig: ${correctAdd}`;
   }
+  roundAdd++;
+  scoreAdd.innerText=`Aufgabe ${Math.min(roundAdd,totalAdd)} von ${totalAdd} – Punkte: ${pointsAdd}`;
+}
 
-  checkBtn.addEventListener("click",checkAnswer);
-  newBtn.addEventListener("click",newTask);
-  answerEl.addEventListener("keydown",e=>{if(e.key==="Enter")checkAnswer();});
-  newTask();
-
-  // ===== Teil 2 =====
-  const taskAdd=document.getElementById("taskAdd");
-  const resultAdd=document.getElementById("resultAdd");
-  const checkBtnAdd=document.getElementById("checkBtnAdd");
-  const newBtnAdd=document.getElementById("newBtnAdd");
-  const scoreAdd=document.getElementById("scoreAdd");
-  const answerAdd=document.getElementById("answerAdd");
-  makeSupButtons("supBtns2", answerAdd);
-
-  let correctAdd="", pointsAdd=0, roundAdd=1, totalAdd=10;
-
-  function formatSci(num, exp) {
-    const mant = num.toString().replace('.', ',');
-    const expChar = superExp[exp];
-    return `${mant} · 10${expChar}`;
+function newAdditionTask(){
+  resultAdd.innerText="";answerAdd.value="";
+  if(roundAdd>totalAdd){
+    taskAdd.innerText="🎉 Übungsrunde fertig!";
+    resultAdd.style.color="green";
+    resultAdd.innerText=`Endstand: ${pointsAdd}/${totalAdd} Punkte.`;
+    newBtnAdd.textContent="Neue Runde";roundAdd=1;pointsAdd=0;return;
   }
-
-  function createConversionTask() {
-    const dir = Math.random()<0.5 ? "toSci" : "toNum";
-    const exp = randInt(2,6); // positive Hochzahlen
-    const mantissa = (Math.random()*9+1).toFixed(2);
-    const value = Math.round(mantissa * Math.pow(10,exp));
-
-    if(value<=100) return createConversionTask();
-
-    let aufgabe, lösung;
-    if(dir==="toSci"){
-      aufgabe = value.toString(); // ohne Punkte
-      lösung = formatSci(mantissa, exp);
-    } else {
-      aufgabe = formatSci(mantissa, exp);
-      lösung = value.toString();
-    }
-    correctAdd = lösung;
-    return aufgabe;
-  }
-
-  function normalizeNum(s){
-    return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
-  }
-
-  function checkAdditionAnswer(){
-    const input=answerAdd.value.trim();
-    if(!input){resultAdd.style.color="gray";resultAdd.innerText="Bitte gib eine Lösung ein.";return;}
-    const a=normExp(normalizeNum(input));
-    const b=normExp(normalizeNum(correctAdd));
-    if(a===b){
-      resultAdd.style.color="green";resultAdd.innerText="✅ Richtig!";pointsAdd++;
-    } else {
-      resultAdd.style.color="red";resultAdd.innerText=`❌ Falsch! Richtig: ${correctAdd}`;
-    }
-    roundAdd++;
-    scoreAdd.innerText=`Aufgabe ${Math.min(roundAdd,totalAdd)} von ${totalAdd} – Punkte: ${pointsAdd}`;
-  }
-
-  function newAdditionTask(){
-    resultAdd.innerText="";answerAdd.value="";
-    if(roundAdd>totalAdd){
-      taskAdd.innerText="🎉 Übungsrunde fertig!";
-      resultAdd.style.color="green";
-      resultAdd.innerText=`Endstand: ${pointsAdd}/${totalAdd} Punkte.`;
-      newBtnAdd.textContent="Neue Runde"; roundAdd=1; pointsAdd=0; return;
-    }
-    const aufgabe=createConversionTask();
-    taskAdd.innerText=aufgabe;
-    scoreAdd.innerText=`Aufgabe ${roundAdd} von ${totalAdd} – Punkte: ${pointsAdd}`;
-  }
-
-  checkBtnAdd.addEventListener("click",checkAdditionAnswer);
-  newBtnAdd.addEventListener("click",newAdditionTask);
-  answerAdd.addEventListener("keydown",e=>{if(e.key==="Enter")checkAdditionAnswer();});
-  newAdditionTask();
+  const aufgabe=createConversionTask();
+  taskAdd.innerText=aufgabe;
+  scoreAdd.innerText=`Aufgabe ${roundAdd} von ${totalAdd} – Punkte: ${pointsAdd}`;
+}
+checkBtnAdd.onclick=checkAdditionAnswer;
+newBtnAdd.onclick=newAdditionTask;
+answerAdd.onkeydown=e=>{if(e.key==="Enter")checkAdditionAnswer();};
+newAdditionTask();
 
 });
 </script>
