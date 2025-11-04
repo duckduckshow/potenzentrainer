@@ -78,20 +78,25 @@ document.addEventListener("DOMContentLoaded",()=>{
   const randomChoice = a => a[Math.floor(Math.random()*a.length)];
   const randInt = (min,max)=>Math.floor(Math.random()*(max-min+1))+min;
   const superExp={1:"¹",2:"²",3:"³",4:"⁴",5:"⁵",6:"⁶",7:"⁷",8:"⁸",9:"⁹"};
-  const expToSup=e=>superExp[e]||"^"+e;
+  const expToSup=e=>superExp[e]||"";
 
   function normExp(str){
-    return str.replace(/\s+/g,"")
-              .replace(/·/g,"*")
-              .replace(/:/g,"/")
-              .replace(/([⁰¹²³⁴⁵⁶⁷⁸⁹])/g,m=>({
-                '⁰':'^0','¹':'^1','²':'^2','³':'^3','⁴':'^4','⁵':'^5',
-                '⁶':'^6','⁷':'^7','⁸':'^8','⁹':'^9'
-              }[m]))
-              .toLowerCase();
+    // Standardisierung: Leerzeichen und Sonderzeichen raus
+    let s = str
+      .replace(/\s+/g,"")
+      .replace(/·/g,"*")
+      .replace(/:/g,"/")
+      .toLowerCase();
+
+    // a¹ soll als a erkannt werden
+    s = s.replace(/([a-z])¹/g,"$1");
+
+    // x⁰ soll als 1 erkannt werden
+    s = s.replace(/[a-z]⁰/g,"1");
+
+    return s;
   }
 
-  // ===== Eingabefeld mit Hochzahl-Buttons =====
   function makeSupButtons(containerId, inputEl) {
     const cont = document.getElementById(containerId);
     for (let i=1; i<=9; i++){
@@ -127,22 +132,34 @@ document.addEventListener("DOMContentLoaded",()=>{
   let correctSolution="";
   let round=1,score=0,totalRounds=10;
 
+  // Exponenten sollen <= 9 bleiben
   function createPowMultiply(){
     const base=randomChoice(VARS);
-    const e1=randInt(1,4), e2=randInt(1,4);
-    correctSolution=`${base}${expToSup(e1+e2)}`;
+    const e1=randInt(1,5);
+    const e2=randInt(1,5);
+    const result=e1+e2;
+    if(result>9) return createPowMultiply(); // falls zu groß, neu generieren
+    correctSolution=`${base}${expToSup(result)}`;
     return `${base}${expToSup(e1)} · ${base}${expToSup(e2)} = ?`;
   }
+
   function createPowDivide(){
     const base=randomChoice(VARS);
-    const e1=randInt(3,8), e2=randInt(1,e1-1);
-    correctSolution=`${base}${expToSup(e1-e2)}`;
+    const e1=randInt(2,9);
+    const e2=randInt(1,e1-1);
+    const result=e1-e2;
+    if(result>9) return createPowDivide();
+    correctSolution = result === 0 ? "1" : `${base}${expToSup(result)}`;
     return `${base}${expToSup(e1)} : ${base}${expToSup(e2)} = ?`;
   }
+
   function createPowOfPow(){
     const base=randomChoice(VARS);
-    const e1=randInt(1,5), e2=randInt(2,4);
-    correctSolution=`${base}${expToSup(e1*e2)}`;
+    const e1=randInt(1,4);
+    const e2=randInt(2,3);
+    const result=e1*e2;
+    if(result>9) return createPowOfPow();
+    correctSolution=`${base}${expToSup(result)}`;
     return `(${base}${expToSup(e1)})${expToSup(e2)} = ?`;
   }
 
@@ -192,30 +209,23 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   let correctAdd="",pointsAdd=0,roundAdd=1,totalAdd=10;
 
-  function formatSci(num,exp){ return `${num.toString().replace('.',',')} · 10${expToSup(exp)}`; }
+  function formatSci(num,exp){ return `${num.toString().replace('.',',')} · 10${superExp[exp]}`; }
 
   function createTenPowerTask(){
     const op=Math.random()<0.5?'·':':';
     const e1=randInt(1,6), e2=randInt(1,6);
-    const resExp = op==='·' ? e1+e2 : e1-e2;
-    correctAdd=`10${expToSup(resExp)}`;
-    return `10${expToSup(e1)} ${op} 10${expToSup(e2)} = ?`;
+    let resExp = op==='·' ? e1+e2 : e1-e2;
+    if(resExp<0 || resExp>9) return createTenPowerTask();
+    correctAdd=resExp===0?"1":`10${superExp[resExp]}`;
+    return `10${superExp[e1]} ${op} 10${superExp[e2]} = ?`;
   }
 
   function createSciNotationTask(){
-    if(Math.random()<0.5){
-      const base=(Math.random()*9+1).toFixed(2);
-      const exp=randInt(3,7);
-      const val=(base*Math.pow(10,exp)).toLocaleString("de-DE");
-      correctAdd=formatSci(base,exp);
-      return `${val} = ?`;
-    } else {
-      const base=(Math.random()*9+1).toFixed(2);
-      const exp=randInt(2,6);
-      const val=(base*Math.pow(10,exp)).toLocaleString("de-DE");
-      correctAdd=val;
-      return `${formatSci(base,exp)} = ?`;
-    }
+    const exp=randInt(1,6);
+    const base=(Math.random()*9+1).toFixed(2);
+    const val=(base*Math.pow(10,exp)).toLocaleString("de-DE");
+    correctAdd=formatSci(base,exp);
+    return `${val} = ?`;
   }
 
   function newAdditionTask(){
@@ -252,5 +262,6 @@ document.addEventListener("DOMContentLoaded",()=>{
 
 });
 </script>
+
 </body>
 </html>
