@@ -203,30 +203,38 @@ function formatSci(mant,exp){
 }
 
 function createConversionTask(){
-  const isPowerOnly=Math.random()<0.33;
-  const dir=toggleDir?"toSci":"toNum";
-  toggleDir=!toggleDir;
-  const exp=randInt(2,8);
+  const isPowerOnly = Math.random() < 0.33;
+  const dir = toggleDir ? "toSci" : "toNum";
+  toggleDir = !toggleDir;
+  const exp = randInt(2, 8);
   let mantissa;
-  if(isPowerOnly){
-    mantissa=randInt(2,9); // 🔹 Jetzt 2–9 statt 1
-  }else{
-    mantissa=(Math.random()*9+1).toFixed(randInt(1,5));
-    mantissa=removeTrailingZeros(mantissa);
+
+  // 🔹 Für reine Zehnerpotenzen jetzt immer 2–9
+  if (isPowerOnly) {
+    mantissa = randInt(2, 9);
+  } else {
+    mantissa = (Math.random() * 9 + 1).toFixed(randInt(1, 5));
+    mantissa = removeTrailingZeros(mantissa);
   }
-  const value=Math.round(mantissa*Math.pow(10,exp));
-  if(value<=100)return createConversionTask();
-  let aufgabe,lösung;
-  if(dir==="toSci"){
-    aufgabe=value.toString();
-    lösung=formatSci(mantissa,exp);
-  }else{
-    aufgabe=formatSci(mantissa,exp);
-    lösung=value.toString();
+
+  const value = Math.round(mantissa * Math.pow(10, exp));
+  if (value <= 100) return createConversionTask();
+
+  let aufgabe, lösung;
+  if (dir === "toSci") {
+    // Zahl → Potenz
+    aufgabe = value.toString();
+    lösung = formatSci(mantissa, exp);
+  } else {
+    // Potenz → Zahl
+    aufgabe = formatSci(mantissa, exp);
+    lösung = value.toString();
   }
-  correctAdd=lösung;
+
+  correctAdd = lösung;
   return aufgabe;
 }
+
 
 function normalizeNum(s){
   return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
