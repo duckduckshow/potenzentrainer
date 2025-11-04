@@ -209,7 +209,7 @@ function createConversionTask(){
   const exp=randInt(2,8);
   let mantissa;
   if(isPowerOnly){
-    mantissa=1;
+    mantissa=randInt(2,9); // 🔹 Jetzt 2–9 statt 1
   }else{
     mantissa=(Math.random()*9+1).toFixed(randInt(1,5));
     mantissa=removeTrailingZeros(mantissa);
