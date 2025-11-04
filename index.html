@@ -140,7 +140,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     const result=e1+e2;
     if(result>9) return createPowMultiply(); // falls zu groß, neu generieren
     correctSolution=`${base}${expToSup(result)}`;
-    return `${base}${expToSup(e1)} · ${base}${expToSup(e2)} = ?`;
+    const show1 = e1===1 ? base : `${base}${expToSup(e1)}`;
+    const show2 = e2===1 ? base : `${base}${expToSup(e2)}`;
+    return `${show1} · ${show2} = ?`;
   }
 
   function createPowDivide(){
@@ -150,7 +152,9 @@ document.addEventListener("DOMContentLoaded",()=>{
     const result=e1-e2;
     if(result>9) return createPowDivide();
     correctSolution = result === 0 ? "1" : `${base}${expToSup(result)}`;
-    return `${base}${expToSup(e1)} : ${base}${expToSup(e2)} = ?`;
+    const show1 = e1===1 ? base : `${base}${expToSup(e1)}`;
+    const show2 = e2===1 ? base : `${base}${expToSup(e2)}`;
+    return `${show1} : ${show2} = ?`;
   }
 
   function createPowOfPow(){
@@ -160,8 +164,10 @@ document.addEventListener("DOMContentLoaded",()=>{
     const result=e1*e2;
     if(result>9) return createPowOfPow();
     correctSolution=`${base}${expToSup(result)}`;
-    return `(${base}${expToSup(e1)})${expToSup(e2)} = ?`;
+    const inner = e1===1 ? base : `${base}${expToSup(e1)}`;
+    return `(${inner})${expToSup(e2)} = ?`;
   }
+
 
   function newTask(){
     resultEl.innerText="";answerEl.value="";
@@ -209,64 +215,87 @@ document.addEventListener("DOMContentLoaded",()=>{
 
   let correctAdd="",pointsAdd=0,roundAdd=1,totalAdd=10;
 
-  // Formatierung: Zahl * 10^n → mit Komma
-  function formatSci(num,exp){
-    return `${num.toString().replace('.',',')} · 10${superExp[Math.abs(exp)]}${exp<0?'⁻':''}`;
+  // Formatierung: Mantisse * 10^n
+  function formatSci(num, exp) {
+    const mant = num.toString().replace('.', ',');
+    const expChar = exp < 0 ? '⁻' + superExp[Math.abs(exp)] : superExp[exp];
+    return `${mant} · 10${expChar}`;
   }
 
-  // Zufällige Aufgabe: entweder Zahl ↔ Zehnerpotenz
-  function createConversionTask(){
-    const dir=Math.random()<0.5?"toSci":"toNum"; // Richtung
-    const exp = randInt(-5,6); // von -5 bis 6
-    const mantissa=(Math.random()*9+1).toFixed(2);
-    const value = Number((mantissa*Math.pow(10,exp)).toFixed(6));
+  // Aufgaben: Zahl ↔ Zehnerpotenz
+  function createConversionTask() {
+    const dir = Math.random() < 0.5 ? "toSci" : "toNum"; 
+    const exp = randInt(-5, 6);
+    const mantissa = (Math.random() * 9 + 1).toFixed(2);
+    const value = Number((mantissa * Math.pow(10, exp)).toFixed(6));
 
-    let aufgabe,lösung;
+    let aufgabe, lösung;
 
-    if(dir==="toSci"){
-      // natürliche Zahl → Zehnerpotenz
-      aufgabe = value.toLocaleString("de-DE").replace(".",",");
-      lösung  = formatSci(mantissa,exp);
+    if (dir === "toSci") {
+      // Zahl → Zehnerpotenz
+      aufgabe = value.toString().replace('.', ','); // Anzeige ohne Punkte
+      lösung = formatSci(mantissa, exp);
     } else {
       // Zehnerpotenz → Zahl
-      aufgabe = formatSci(mantissa,exp);
-      lösung  = value.toLocaleString("de-DE").replace(".",",");
+      aufgabe = formatSci(mantissa, exp);
+      lösung = value.toLocaleString("de-DE", {useGrouping: false}).replace('.', ','); // keine Punkte in Anzeige
     }
 
     correctAdd = lösung;
     return aufgabe;
   }
 
-  function newAdditionTask(){
-    resultAdd.innerText="";answerAdd.value="";
-    if(roundAdd>totalAdd){
-      taskAdd.innerText="🎉 Übungsrunde fertig!";
-      resultAdd.style.color="green";
-      resultAdd.innerText=`Endstand: ${pointsAdd}/${totalAdd} Punkte.`;
-      newBtnAdd.textContent="Neue Runde"; roundAdd=1; pointsAdd=0; return;
+  function newAdditionTask() {
+    resultAdd.innerText = "";
+    answerAdd.value = "";
+    if (roundAdd > totalAdd) {
+      taskAdd.innerText = "🎉 Übungsrunde fertig!";
+      resultAdd.style.color = "green";
+      resultAdd.innerText = `Endstand: ${pointsAdd}/${totalAdd} Punkte.`;
+      newBtnAdd.textContent = "Neue Runde";
+      roundAdd = 1; pointsAdd = 0;
+      return;
     }
     const aufgabe = createConversionTask();
-    taskAdd.innerText=aufgabe;
-    scoreAdd.innerText=`Aufgabe ${roundAdd} von ${totalAdd} – Punkte: ${pointsAdd}`;
+    taskAdd.innerText = aufgabe;
+    scoreAdd.innerText = `Aufgabe ${roundAdd} von ${totalAdd} – Punkte: ${pointsAdd}`;
   }
 
-  function normalizeNum(s){ return s.replace(/\s/g,"").replace(",","."); }
+  // Eingaben vergleichen: Punkte/Kommata ignorieren
+  function normalizeNum(s) {
+    return s
+      .replace(/\s/g, "")
+      .replace(/[.,]/g, "")   // Punkte und Kommas komplett entfernen
+      .toLowerCase();
+  }
 
-  function checkAdditionAnswer(){
-    const input=answerAdd.value.trim();
-    if(!input){resultAdd.style.color="gray";resultAdd.innerText="Bitte gib eine Lösung ein.";return;}
-    if(normExp(normalizeNum(input))===normExp(normalizeNum(correctAdd))){
-      resultAdd.style.color="green";resultAdd.innerText="✅ Richtig!";pointsAdd++;
-    } else {
-      resultAdd.style.color="red";resultAdd.innerText=`❌ Falsch! Richtig: ${correctAdd}`;
+  function checkAdditionAnswer() {
+    const input = answerAdd.value.trim();
+    if (!input) {
+      resultAdd.style.color = "gray";
+      resultAdd.innerText = "Bitte gib eine Lösung ein.";
+      return;
     }
+
+    const a = normExp(normalizeNum(input));
+    const b = normExp(normalizeNum(correctAdd));
+
+    if (a === b) {
+      resultAdd.style.color = "green";
+      resultAdd.innerText = "✅ Richtig!";
+      pointsAdd++;
+    } else {
+      resultAdd.style.color = "red";
+      resultAdd.innerText = `❌ Falsch! Richtig: ${correctAdd}`;
+    }
+
     roundAdd++;
-    scoreAdd.innerText=`Aufgabe ${Math.min(roundAdd,totalAdd)} von ${totalAdd} – Punkte: ${pointsAdd}`;
+    scoreAdd.innerText = `Aufgabe ${Math.min(roundAdd, totalAdd)} von ${totalAdd} – Punkte: ${pointsAdd}`;
   }
 
-  checkBtnAdd.addEventListener("click",checkAdditionAnswer);
-  newBtnAdd.addEventListener("click",newAdditionTask);
-  answerAdd.addEventListener("keydown",e=>{if(e.key==="Enter")checkAdditionAnswer();});
+  checkBtnAdd.addEventListener("click", checkAdditionAnswer);
+  newBtnAdd.addEventListener("click", newAdditionTask);
+  answerAdd.addEventListener("keydown", e => { if (e.key === "Enter") checkAdditionAnswer(); });
   newAdditionTask();
 
 
