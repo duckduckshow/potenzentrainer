@@ -169,21 +169,41 @@ function newTask(){
   scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
 }
 
-function checkAnswer(){
-  const input=answerEl.value.trim();
-  if(!input){resultEl.style.color="gray";resultEl.innerText="Bitte gib eine Lösung ein.";return;}
-  if(normExp(input)===normExp(correctSolution)){
-    resultEl.style.color="green";resultEl.innerText="✅ Richtig!";score++;
-  }else{
-    resultEl.style.color="red";resultEl.innerText=`❌ Falsch! Richtig: ${correctSolution}`;
+function checkAnswer() {
+  const input = answerEl.value.trim();
+  if (!input) {
+    resultEl.style.color = "gray";
+    resultEl.innerText = "Bitte gib eine Lösung ein.";
+    return;
   }
+
+  // Normalisierte Texte vergleichen, aber "x" und "x¹" als gleich behandeln
+  const normIn = normExp(input);
+  const normSol = normExp(correctSolution);
+
+  function equalPowers(a, b) {
+    if (a === b) return true;
+
+    // Fall: x¹ ≡ x oder umgekehrt
+    const strip1 = s => s.replace(/(\^[¹1])/g, "");
+    if (strip1(a) === strip1(b)) return true;
+
+    return false;
+  }
+
+  if (equalPowers(normIn, normSol)) {
+    resultEl.style.color = "green";
+    resultEl.innerText = "✅ Richtig!";
+    score++;
+  } else {
+    resultEl.style.color = "red";
+    resultEl.innerText = `❌ Falsch! Richtig: ${correctSolution}`;
+  }
+
   round++;
-  scoreEl.innerText=`Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+  scoreEl.innerText = `Aufgabe ${Math.min(round, totalRounds)} von ${totalRounds} – Punkte: ${score}`;
 }
-checkBtn.onclick=checkAnswer;
-newBtn.onclick=newTask;
-answerEl.onkeydown=e=>{if(e.key==="Enter")checkAnswer();};
-newTask();
+
 
 // ========= Teil 2 (Zehnerpotenzen & Gleitkomma) =========
 const taskAdd=document.getElementById("taskAdd");
