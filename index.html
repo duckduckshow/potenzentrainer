@@ -182,7 +182,7 @@ function newTask(){
   taskEl.innerText=aufgabe;
   scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
 }
-function checkAnswer(){
+function checkAnswer() {
   const input = answerEl.value.trim();
   if (!input) {
     resultEl.style.color = "gray";
@@ -193,19 +193,17 @@ function checkAnswer(){
   const normIn = normExp(input);
   const normSol = normExp(correctSolution);
 
-  // Normalisierung für Vergleich
-  const stripPow1 = s => s.replace(/¹/g,"").replace(/\^1/g,"");
+  // Funktion zum Entfernen von ^1 und Hoch-¹ für Vergleiche
+  const stripPow1 = s => s.replace(/¹/g, "").replace(/\^1/g, "");
 
   let equal = false;
 
-  // 1️⃣ Wenn Lösung KEIN a¹ ist (also z. B. a², a³ usw.)
-  // → a¹ und a sind beide gleichwertig
-  if (normSol !== normExp("a")) {
-    equal = (normIn === normSol) || (stripPow1(normIn) === stripPow1(normSol));
+  // 🟢 Sonderfall: Wenn die Lösung genau "a" oder "b" oder "x" oder "y" ist → a¹ NICHT akzeptieren!
+  if (VARS.some(v => normSol === v)) {
+    equal = normIn === normSol; // Nur exakt "a" ist richtig
   } else {
-    // 2️⃣ Wenn Lösung a (d. h. res===1)
-    // → a¹ soll explizit NICHT akzeptiert werden
-    equal = normIn === normSol;
+    // Alle anderen Lösungen: a¹ und a sind gleichwertig (wie bei Multiplikation oder Potenzieren)
+    equal = (normIn === normSol) || (stripPow1(normIn) === stripPow1(normSol));
   }
 
   if (equal) {
@@ -218,7 +216,7 @@ function checkAnswer(){
   }
 
   round++;
-  scoreEl.innerText = `Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+  scoreEl.innerText = `Aufgabe ${Math.min(round, totalRounds)} von ${totalRounds} – Punkte: ${score}`;
 }
 
 // ▶ Event-Handler + erster Start (fehlten zuvor)
