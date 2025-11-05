@@ -244,40 +244,58 @@ function formatSci(mant,exp){
   return `${mStr} · 10${superExp[exp]}`;
 }
 
-function createConversionTask(){
-  const isPowerOnly = Math.random() < 0.33;       // ~1/3 reine 10erpotenzen
-  const dir = toggleDir ? "toSci" : "toNum";      // Richtung abwechselnd
+function createConversionTask() {
+  const isPowerOnly = Math.random() < 0.33; // ca. 1/3 reine Zehnerpotenzen
+  const dir = toggleDir ? "toSci" : "toNum"; // abwechselnde Richtung
   toggleDir = !toggleDir;
-  const exp = randInt(2, 8);                      // positive Exponenten
+  const exp = randInt(3, 8); // Exponent 3–8 → große Zahlen mit mindestens zwei Nullen
   let mantissa;
 
+  // 🔹 Für reine Zehnerpotenzen: Mantisse 2–9
   if (isPowerOnly) {
-    mantissa = randInt(2, 9);                     // Multiplikator 2–9
+    mantissa = randInt(2, 9);
   } else {
-    // Mantisse mit bis zu 5 Dezimalen, aber ohne endende 0
-    mantissa = (Math.random()*9+1).toFixed(randInt(1,5));
-    mantissa = removeTrailingZeros(mantissa);
-    // Mantisse darf nicht mehr Dezimalen als der Exponent haben → sonst keine ganze Zahl
+    // 🔹 Für Gleitkommazahlen: 1–9 mit max 5 Nachkommastellen
+    const totalDigits = randInt(2, 5); // insgesamt 2–5 Stellen (inkl. Nachkommastellen)
+    let raw = (Math.random() * 9 + 1).toFixed(totalDigits - 1);
+    mantissa = removeTrailingZeros(raw);
+  }
+
+  // 🔹 Gleitkommazahl darf nicht mehr Nachkommastellen haben als der Exponent
+  if (!isPowerOnly) {
     const parts = mantissa.split(".");
-    if (parts.length>1 && parts[1].length > exp) return createConversionTask();
+    if (parts.length > 1 && parts[1].length > exp) {
+      return createConversionTask(); // Neu versuchen
+    }
   }
 
-  // Wert als Ganzzahl-STRING berechnen (ohne Float-Fehler)
-  const valueStr = mantissaTimes10ToExpAsIntStr(String(mantissa), exp);
-  if (!valueStr) return createConversionTask();
-  if (parseInt(valueStr,10) <= 100) return createConversionTask();
+  // 🔹 Wert berechnen
+  const value = mantissa * Math.pow(10, exp);
 
-  let aufgabe, loesung;
-  if (dir === "toSci") {            // Zahl → Potenz
-    aufgabe = valueStr;             // Anzeige ohne Tausenderpunkte
-    loesung = formatSci(mantissa,exp);
-  } else {                          // Potenz → Zahl
-    aufgabe = formatSci(mantissa,exp);
-    loesung = valueStr;
+  // 🔹 Ergebnis muss ganzzahlig sein und auf mindestens zwei Nullen enden
+  if (!Number.isInteger(value) || value % 100 !== 0) {
+    return createConversionTask();
   }
-  correctAdd = loesung;
+
+  // 🔹 Nur sinnvolle Zahlen (> 100) zulassen
+  if (value <= 100) return createConversionTask();
+
+  // 🔹 Aufgabenrichtung bestimmen
+  let aufgabe, lösung;
+  if (dir === "toSci") {
+    // Zahl → Potenzdarstellung
+    aufgabe = value.toLocaleString("de-DE").replace(/\./g, ""); // ohne Tausenderpunkt
+    lösung = formatSci(mantissa, exp);
+  } else {
+    // Potenz → Zahl
+    aufgabe = formatSci(mantissa, exp);
+    lösung = value.toString();
+  }
+
+  correctAdd = lösung;
   return aufgabe;
 }
+
 
 function normalizeNum(s){
   return s.replace(/\s/g,"").replace(/[.,]/g,"").toLowerCase();
