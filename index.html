@@ -183,18 +183,44 @@ function newTask(){
   scoreEl.innerText=`Aufgabe ${round} von ${totalRounds} – Punkte: ${score}`;
 }
 function checkAnswer(){
-  const input=answerEl.value.trim();
-  if(!input){resultEl.style.color="gray";resultEl.innerText="Bitte gib eine Lösung ein.";return;}
-  const normIn=normExp(input);
-  const normSol=normExp(correctSolution);
-  // y ≡ y¹ akzeptieren (nur hier oben relevant)
+  const input = answerEl.value.trim();
+  if (!input) {
+    resultEl.style.color = "gray";
+    resultEl.innerText = "Bitte gib eine Lösung ein.";
+    return;
+  }
+
+  const normIn = normExp(input);
+  const normSol = normExp(correctSolution);
+
+  // Normalisierung für Vergleich
   const stripPow1 = s => s.replace(/¹/g,"").replace(/\^1/g,"");
-  const equal = (normIn===normSol) || (stripPow1(normIn)===stripPow1(normSol));
-  if(equal){ resultEl.style.color="green";resultEl.innerText="✅ Richtig!";score++; }
-  else{ resultEl.style.color="red";resultEl.innerText=`❌ Falsch! Richtig: ${correctSolution}`; }
+
+  let equal = false;
+
+  // 1️⃣ Wenn Lösung KEIN a¹ ist (also z. B. a², a³ usw.)
+  // → a¹ und a sind beide gleichwertig
+  if (normSol !== normExp("a")) {
+    equal = (normIn === normSol) || (stripPow1(normIn) === stripPow1(normSol));
+  } else {
+    // 2️⃣ Wenn Lösung a (d. h. res===1)
+    // → a¹ soll explizit NICHT akzeptiert werden
+    equal = normIn === normSol;
+  }
+
+  if (equal) {
+    resultEl.style.color = "green";
+    resultEl.innerText = "✅ Richtig!";
+    score++;
+  } else {
+    resultEl.style.color = "red";
+    resultEl.innerText = `❌ Falsch! Richtig: ${correctSolution}`;
+  }
+
   round++;
-  scoreEl.innerText=`Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
+  scoreEl.innerText = `Aufgabe ${Math.min(round,totalRounds)} von ${totalRounds} – Punkte: ${score}`;
 }
+
 // ▶ Event-Handler + erster Start (fehlten zuvor)
 checkBtn.onclick=checkAnswer;
 newBtn.onclick=newTask;
