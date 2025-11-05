@@ -193,16 +193,17 @@ function checkAnswer() {
   const normIn = normExp(input);
   const normSol = normExp(correctSolution);
 
-  // Funktion zum Entfernen von ^1 und Hoch-¹ für Vergleiche
-  const stripPow1 = s => s.replace(/¹/g, "").replace(/\^1/g, "");
+  // Entfernt nur ^1 bzw. ¹ zur Toleranzprüfung
+  const stripPow1 = s => s.replace(/\^1/g, "").replace(/¹/g, "");
 
   let equal = false;
 
-  // 🟢 Sonderfall: Wenn die Lösung genau "a" oder "b" oder "x" oder "y" ist → a¹ NICHT akzeptieren!
-  if (VARS.some(v => normSol === v)) {
-    equal = normIn === normSol; // Nur exakt "a" ist richtig
+  // 🔹 Wenn die richtige Lösung nur eine Variable ist (z. B. "a", "b", "x", "y"):
+  // dann darf KEIN a¹ als richtig gelten!
+  if (VARS.includes(normSol)) {
+    equal = (normIn === normSol); // nur exakter Treffer erlaubt
   } else {
-    // Alle anderen Lösungen: a¹ und a sind gleichwertig (wie bei Multiplikation oder Potenzieren)
+    // 🔹 in allen anderen Fällen darf ^1 oder ¹ weggelassen werden
     equal = (normIn === normSol) || (stripPow1(normIn) === stripPow1(normSol));
   }
 
@@ -218,6 +219,7 @@ function checkAnswer() {
   round++;
   scoreEl.innerText = `Aufgabe ${Math.min(round, totalRounds)} von ${totalRounds} – Punkte: ${score}`;
 }
+
 
 // ▶ Event-Handler + erster Start (fehlten zuvor)
 checkBtn.onclick=checkAnswer;
